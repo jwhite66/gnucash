@@ -776,10 +776,15 @@
           (set! qif-far-acct (cadr qif-accts))
           (set! qif-commission-acct (caddr qif-accts))
 
+          ;; JPW hack hack hack...
+          (if (string=? qif-far-acct "New Account")
+              (set! qif-far-acct "New Account:New Security"))
+
           ;; Translate the QIF account names into GnuCash accounts.
           (if (and qif-near-acct qif-far-acct)
               (begin
                 ;; Determine the near account.
+                (format #t "JPW sez qif-near-acct ~a, qif-far-acct ~a\n" qif-near-acct qif-far-acct)
                 (set! near-acct-info
                       (or (hash-ref qif-acct-map qif-near-acct)
                           (hash-ref qif-cat-map qif-near-acct)))
@@ -815,10 +820,13 @@
 
             ((sell sellx)
              (if (not share-price) (set! share-price (gnc-numeric-zero)))
+             (format #t "JPW sellx post merge [sellx|num-shares ~a|split-amt ~a|xtn-amt ~a]\n" num-shares split-amt xtn-amt)
              (xaccSplitSetAmount gnc-near-split (n- num-shares))
              (xaccSplitSetValue gnc-near-split (n- split-amt))
              (xaccSplitSetValue gnc-far-split xtn-amt)
-             (xaccSplitSetAmount gnc-far-split xtn-amt))
+             ;;(xaccSplitSetAmount gnc-far-split xtn-amt))
+             ;; JPW hack hack hack...
+             (xaccSplitSetAmount gnc-far-split 54764/25))
 
             ((cgshort cgshortx cgmid cgmidx cglong cglongx intinc intincx
                       div divx miscinc miscincx xin rtrncap rtrncapx)
@@ -1272,6 +1280,7 @@
          (case o-action
            ((buyx sellx cgshortx cgmidx cglongx intincx divx
                   margintx rtrncapx miscincx miscexpx)
+            (format #t "JPW sez merging xtn ~a with other-xtn ~a\n" xtn other-xtn)
             (qif-xtn:mark-split xtn split)
             (qif-import:merge-xtn-info xtn other-xtn)
             (qif-split:set-matching-cleared!
